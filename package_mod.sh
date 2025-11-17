@@ -25,8 +25,8 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Get the directory where the script is located
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# Get the directory where the script is called from
+SCRIPT_DIR="$(pwd)"
 
 # Read version and name from info.json
 if [ ! -f "$SCRIPT_DIR/info.json" ]; then
@@ -58,8 +58,11 @@ FILES_TO_INCLUDE=(
     "constants.lua"
     "thumbnail.png"
     "graphics"
+    "graphic"
+    "logics"
     "logic"
     "prototypes"
+    "prototype"
     "locale"
 )
 

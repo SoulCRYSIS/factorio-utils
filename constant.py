@@ -1,4 +1,4 @@
-frame_count = 128
-frames_per_row = 8
-frame_width = 192
-frame_height = 192
+frame_count = 6
+frames_per_row = 3
+frame_width = 640
+frame_height = 560
