@@ -50,7 +50,7 @@ def blacken_image(input_path, threshold, blur_radius, output_path=None):
     r, g, b, a = img.split()
     
     # Apply a slight blur to the alpha channel only
-    a_blurred = a.filter(ImageFilter.GaussianBlur(radius=1))
+    a_blurred = a.filter(ImageFilter.GaussianBlur(radius=blur_radius))
     
     # Recombine: RGB channels are all black (0), use blurred alpha
     img = Image.merge('RGBA', (r, g, b, a_blurred))
@@ -78,15 +78,15 @@ def main():
     )
     parser.add_argument(
         '-t', '--threshold',
-        help='Threshold for considering a pixel non-transparent (0-255, default: 0)',
+        help='Threshold for considering a pixel non-transparent (0-255, default: 20)',
         type=int,
-        default=10
+        default=20
     )
     parser.add_argument(
         '-b', '--blur-radius',
-        help='Blur radius for edge softening (default: 1)',
+        help='Blur radius for edge softening (default: 0)',
         type=int,
-        default=1
+        default=0
     )
     
     args = parser.parse_args()
