@@ -73,7 +73,7 @@ def get_columns(frame_count):
 
 import shutil
 
-def process_component(component, prefix, destination, is_plant=False):
+def process_component(component, prefix, destination, is_plant=False, is_one_row=False):
     if not component["enabled"]:
         return
 
@@ -89,11 +89,18 @@ def process_component(component, prefix, destination, is_plant=False):
     
     print(f"[{component['name']}] Found {frame_count} frames. Size: {width}x{height}")
     
-    cols = get_columns(frame_count)
-    rows = math.ceil(frame_count / cols)
     
-    sheet_width = cols * width
-    sheet_height = rows * height
+    
+    if is_one_row:
+        cols = frame_count
+        rows = 1
+        sheet_width = frame_count * width
+        sheet_height = height
+    else:
+        cols = get_columns(frame_count)
+        rows = math.ceil(frame_count / cols)
+        sheet_width = cols * width
+        sheet_height = rows * height
     
     print(f"[{component['name']}] Creating spritesheet: {sheet_width}x{sheet_height} ({cols}x{rows})")
     
@@ -101,10 +108,14 @@ def process_component(component, prefix, destination, is_plant=False):
     
     for i, file_path in enumerate(files):
         with Image.open(file_path) as img:
-            col = i % cols
-            row = i // cols
-            x = col * width
-            y = row * height
+            if is_one_row:
+                x = i * width
+                y = 0
+            else:
+                col = i % cols
+                row = i // cols
+                x = col * width
+                y = row * height
             sheet.paste(img, (x, y))
             
     destination_root = PROJECT_ROOT / destination
@@ -137,7 +148,7 @@ def process_component(component, prefix, destination, is_plant=False):
             shutil.copy2(output_path, harvest_shadow_path)
             print(f"[{component['name']}] Created Plant copy: {harvest_shadow_path}")
 
-def main(prefix, destination, include_object=True, include_shadow=True, include_reflection=True, include_glow=True, is_plant=False):
+def main(prefix, destination, include_object=True, include_shadow=True, include_reflection=True, include_glow=True, is_plant=False, is_one_row=False):
     print(f"Processing sprites for prefix: {prefix}")
     print(f"Destination: {destination}")
     if is_plant:
@@ -172,7 +183,7 @@ def main(prefix, destination, include_object=True, include_shadow=True, include_
     
     for component in components:
         try:
-            process_component(component, prefix, destination, is_plant)
+            process_component(component, prefix, destination, is_plant, is_one_row)
         except Exception as e:
             print(f"Error processing {component['name']}: {e}")
 

@@ -1,8 +1,9 @@
 #!/bin/bash
 
 # Script to package the Factorio mod and move it to the mods directory
-# Usage: ./package_mod.sh [--local]
+# Usage: ./package_mod.sh [--local] [--exclude-ext <extensions>]
 #   --local or -l: Export to current directory instead of Factorio mods folder
+#   --exclude-ext or -x: Comma-separated list of file extensions to exclude
 
 # Parse command line arguments
 EXPORT_LOCAL=false
@@ -12,9 +13,14 @@ while [[ $# -gt 0 ]]; do
             EXPORT_LOCAL=true
             shift
             ;;
+        -x|--exclude-ext)
+            EXCLUDE_EXTS="$2"
+            shift 2
+            ;;
         -h|--help)
-            echo "Usage: $0 [--local]"
+            echo "Usage: $0 [--local] [--exclude-ext <extensions>]"
             echo "  --local, -l: Export to current directory instead of Factorio mods folder"
+            echo "  --exclude-ext, -x: Comma-separated list of file extensions to exclude (e.g. 'blend,psd')"
             exit 0
             ;;
         *)
@@ -66,6 +72,16 @@ FILES_TO_INCLUDE=(
     "locale"
 )
 
+# List of file extensions to exclude
+EXTENSIONS_TO_EXCLUDE=(
+    "blend"
+    "blend1"
+    "xcf"
+    "psd"
+    "DS_Store"
+    "clip"
+)
+
 # Change to the script directory
 cd "$SCRIPT_DIR"
 
@@ -95,6 +111,30 @@ for item in "${FILES_TO_INCLUDE[@]}"; do
         echo "  Warning: $item not found, skipping..."
     fi
 done
+
+# Remove excluded file extensions if specified
+echo "Removing excluded file extensions..."
+
+# Process extensions from constant array
+for ext in "${EXTENSIONS_TO_EXCLUDE[@]}"; do
+    if [ -n "$ext" ]; then
+        echo "  Removing *.$ext..."
+        find "$TEMP_DIR" -type f -name "*.$ext" -delete
+    fi
+done
+
+if [ -n "$EXCLUDE_EXTS" ]; then
+    echo "Removing additional excluded file extensions: $EXCLUDE_EXTS"
+    IFS=',' read -ra EXTS <<< "$EXCLUDE_EXTS"
+    for ext in "${EXTS[@]}"; do
+        # Trim whitespace
+        ext=$(echo "$ext" | xargs)
+        if [ -n "$ext" ]; then
+            echo "  Removing *.$ext..."
+            find "$TEMP_DIR" -type f -name "*.$ext" -delete
+        fi
+    done
+fi
 
 # Change to parent directory of temp folder and create zip
 echo "Creating $ZIP_NAME..."
