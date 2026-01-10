@@ -70,6 +70,7 @@ FILES_TO_INCLUDE=(
     "prototypes"
     "prototype"
     "locale"
+    "changelog.txt"
 )
 
 # List of file extensions to exclude
@@ -173,6 +174,8 @@ rm -rf "$TEMP_DIR"
 if [ -f "$DESTINATION" ]; then
     echo "Success! Mod packaged and exported."
     echo "Location: $DESTINATION"
+    FILE_SIZE=$(du -h "$DESTINATION" | awk '{print $1}')
+    echo "Size: $FILE_SIZE"
 else
     echo "Error: Failed to move $ZIP_NAME to destination"
     exit 1
