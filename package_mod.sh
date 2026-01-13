@@ -59,6 +59,8 @@ TEMP_DIR="/tmp/${MOD_FOLDER}"
 FILES_TO_INCLUDE=(
     "info.json"
     "data.lua"
+    "data-fixes.lua"
+    "data-final-fixes.lua"
     "control.lua"
     "settings.lua"
     "constants.lua"
