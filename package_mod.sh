@@ -7,10 +7,15 @@
 
 # Parse command line arguments
 EXPORT_LOCAL=false
+PACKAGE_GRAPHICS=false
 while [[ $# -gt 0 ]]; do
     case $1 in
         -l|--local)
             EXPORT_LOCAL=true
+            shift
+            ;;
+        -g|--graphics)
+            PACKAGE_GRAPHICS=true
             shift
             ;;
         -x|--exclude-ext)
@@ -18,8 +23,9 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         -h|--help)
-            echo "Usage: $0 [--local] [--exclude-ext <extensions>]"
+            echo "Usage: $0 [--local] [--exclude-ext <extensions>] [--graphics]"
             echo "  --local, -l: Export to current directory instead of Factorio mods folder"
+            echo "  --graphics, -g: Package graphics folder only (uses graphics/info.json)"
             echo "  --exclude-ext, -x: Comma-separated list of file extensions to exclude (e.g. 'blend,psd')"
             exit 0
             ;;
@@ -34,14 +40,21 @@ done
 # Get the directory where the script is called from
 SCRIPT_DIR="$(pwd)"
 
+# Determine which info.json to use
+if [ "$PACKAGE_GRAPHICS" = true ]; then
+    INFO_JSON_PATH="$SCRIPT_DIR/graphics/info.json"
+else
+    INFO_JSON_PATH="$SCRIPT_DIR/info.json"
+fi
+
 # Read version and name from info.json
-if [ ! -f "$SCRIPT_DIR/info.json" ]; then
-    echo "Error: info.json not found in $SCRIPT_DIR"
+if [ ! -f "$INFO_JSON_PATH" ]; then
+    echo "Error: info.json not found in $INFO_JSON_PATH"
     exit 1
 fi
 
-MOD_NAME=$(grep -o '"name"[[:space:]]*:[[:space:]]*"[^"]*"' "$SCRIPT_DIR/info.json" | sed 's/.*"name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
-MOD_VERSION=$(grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' "$SCRIPT_DIR/info.json" | sed 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+MOD_NAME=$(grep -o '"name"[[:space:]]*:[[:space:]]*"[^"]*"' "$INFO_JSON_PATH" | sed 's/.*"name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+MOD_VERSION=$(grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' "$INFO_JSON_PATH" | sed 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
 
 if [ -z "$MOD_NAME" ] || [ -z "$MOD_VERSION" ]; then
     echo "Error: Failed to read mod name or version from info.json"
@@ -56,24 +69,31 @@ FACTORIO_MODS_DIR="$HOME/Library/Application Support/factorio/mods"
 TEMP_DIR="/tmp/${MOD_FOLDER}"
 
 # List of files and folders to include in the package
-FILES_TO_INCLUDE=(
-    "info.json"
-    "data.lua"
-    "data-fixes.lua"
-    "data-final-fixes.lua"
-    "control.lua"
-    "settings.lua"
-    "constants.lua"
-    "thumbnail.png"
-    "graphics"
-    "graphic"
-    "logics"
-    "logic"
-    "prototypes"
-    "prototype"
-    "locale"
-    "changelog.txt"
-)
+if [ "$PACKAGE_GRAPHICS" = true ]; then
+    FILES_TO_INCLUDE=(
+        "graphics"
+        "graphic"
+    )
+else
+    FILES_TO_INCLUDE=(
+        "info.json"
+        "data.lua"
+        "data-fixes.lua"
+        "data-final-fixes.lua"
+        "control.lua"
+        "settings.lua"
+        "constants.lua"
+        "thumbnail.png"
+        # "graphics" # Excluded
+        # "graphic"  # Excluded
+        "logics"
+        "logic"
+        "prototypes"
+        "prototype"
+        "locale"
+        "changelog.txt"
+    )
+fi
 
 # List of file extensions to exclude
 EXTENSIONS_TO_EXCLUDE=(
@@ -106,10 +126,21 @@ mkdir -p "$TEMP_DIR"
 
 # Copy mod files to temp directory
 echo "Copying mod files..."
+if [ "$PACKAGE_GRAPHICS" = true ]; then
+    # Manually copy info.json from the source path
+    echo "  Copying info.json from $INFO_JSON_PATH..."
+    cp "$INFO_JSON_PATH" "$TEMP_DIR/info.json"
+fi
+
 for item in "${FILES_TO_INCLUDE[@]}"; do
     if [ -e "$item" ]; then
-        echo "  Copying $item..."
-        cp -r "$item" "$TEMP_DIR/"
+        if [ "$PACKAGE_GRAPHICS" = true ] && [[ "$item" == "graphics" || "$item" == "graphic" ]]; then
+            echo "  Copying contents of $item..."
+            cp -r "$item"/* "$TEMP_DIR/"
+        else
+            echo "  Copying $item..."
+            cp -r "$item" "$TEMP_DIR/"
+        fi
     else
         echo "  Warning: $item not found, skipping..."
     fi
