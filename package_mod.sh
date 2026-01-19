@@ -65,7 +65,33 @@ echo "Packaging ${MOD_NAME} v${MOD_VERSION}..."
 
 MOD_FOLDER="${MOD_NAME}_${MOD_VERSION}"
 ZIP_NAME="${MOD_FOLDER}.zip"
-FACTORIO_MODS_DIR="$HOME/Library/Application Support/factorio/mods"
+
+# Determine OS and set mods directory
+uname_out="$(uname -s)"
+case "${uname_out}" in
+    Linux*)     
+        FACTORIO_MODS_DIR="$HOME/.factorio/mods"
+        ;;
+    Darwin*)    
+        FACTORIO_MODS_DIR="$HOME/Library/Application Support/factorio/mods"
+        ;;
+    CYGWIN*|MINGW*|MSYS*)
+        # Windows path provided by user: C:\Users\SoulCRYSIS\AppData\Roaming\Factorio\mods
+        # Convert to unix-style path if needed. 
+        # Assuming Git Bash/MSYS where C: is /c
+        # Trying to use $APPDATA if available, otherwise fallback to hardcoded path
+        if [ -n "$APPDATA" ]; then
+            FACTORIO_MODS_DIR="$APPDATA/Factorio/mods"
+        else
+            FACTORIO_MODS_DIR="/c/Users/SoulCRYSIS/AppData/Roaming/Factorio/mods"
+        fi
+        ;;
+    *)          
+        echo "Warning: Unknown OS ${uname_out}, defaulting to Linux path"
+        FACTORIO_MODS_DIR="$HOME/.factorio/mods"
+        ;;
+esac
+
 TEMP_DIR="/tmp/${MOD_FOLDER}"
 
 # List of files and folders to include in the package
