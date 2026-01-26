@@ -41,6 +41,7 @@ def main():
     parser = argparse.ArgumentParser(description="Package Factorio mod")
     parser.add_argument("-l", "--local", action="store_true", help="Export to current directory instead of Factorio mods folder")
     parser.add_argument("-g", "--graphics", action="store_true", help="Package graphics folder only")
+    parser.add_argument("--all", action="store_true", help="Package all files including graphics")
     parser.add_argument("-x", "--exclude-ext", help="Comma-separated list of file extensions to exclude")
     
     args = parser.parse_args()
@@ -119,10 +120,13 @@ def main():
         else:
             # Normal mode
             files_to_include = [
-                "info.json", "data.lua", "data-fixes.lua", "data-final-fixes.lua",
+                "info.json", "data.lua", "data-updates.lua", "data-final-fixes.lua",
                 "control.lua", "settings.lua", "constants.lua", "thumbnail.png",
                 "logics", "logic", "prototypes", "prototype", "locale", "changelog.txt"
             ]
+
+            if args.all:
+                files_to_include.extend(["graphics", "graphic"])
             
             for item in files_to_include:
                 src = os.path.join(project_root, item)
